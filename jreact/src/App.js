@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import './App.css'
 import axios from 'axios'
+import Button from '@mui/material/Button';
 //import 'bootstrap/dist/css/bootstrap.min.css'
 //import Button from 'react-bootstrap/Button';
 //import { Button } from 'react-bootstrap';
@@ -13,6 +14,7 @@ class App extends Component {
         this.state = {
             invitation_url: '',
             invitation_url2:'',
+            showQRCode: false
         }
 
         this.handleClick = this.handleClick.bind(this)
@@ -21,10 +23,12 @@ class App extends Component {
 
     handleClick () {
         console.log('Success!')
+        
         axios.get('http://localhost:8000/getServiceLink').then(response => {
         console.log(response);
         console.log(response.data);
-         this.setState({invitation_url: "http://192.168.2.152:8000/getInvitation?start=Hamburg-Hbf&dest=KoelnBonn-Airport&time=14:41"})});   
+        this.setState({invitation_url: "http://192.168.2.152:8000/getInvitation?start=Hamburg-Hbf&dest=KoelnBonn-Airport&time=14:41"})});
+           
     }
 
     handleClick2 () {
@@ -39,7 +43,6 @@ class App extends Component {
     return (
             <div class="row" className="App" exact path='/ergebnis'>
               <header className="App-header">
-          
               <h5 class="Abstand">Ergebnis:</h5>
 
               <div class="column">

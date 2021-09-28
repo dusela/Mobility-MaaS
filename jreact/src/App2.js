@@ -1,7 +1,14 @@
 import React, { Component } from 'react'
 import './App.css'
+import Button from '@mui/material/Button';
+import App from './App';
 
 class App2 extends Component {
+  constructor (probs) {
+    super(probs)
+    this.state = {
+        showResult: false
+    }}
 
 
   render () {
@@ -27,10 +34,14 @@ class App2 extends Component {
                 <br></br>
                 <label for="AStandort">Zieldestination:</label>
                 <input name="ZPosition" id="ZielPosition" type="text" value="London Heathrow" />
-                <input type="submit" value="Suchen"></input>
+                <Button onClick={() => this.setState({showResult: true})}>Suchen</Button>
               </form>
               </header>
+              <div>
+                {this.state.showResult && <App></App>}
+              </div>
             </div>
+            
     )
   }
 }
