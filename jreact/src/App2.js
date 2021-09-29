@@ -34,7 +34,7 @@ class App2 extends Component {
                 <br></br>
                 <label for="AStandort">Zieldestination:</label>
                 <input name="ZPosition" id="ZielPosition" type="text" value="London Heathrow" />
-                <Button onClick={() => this.setState({showResult: true})}>Suchen</Button>
+                <Button size="small" variant="contained" color="success" onClick={() => this.setState({showResult: true})}>Suchen</Button>
               </form>
               </header>
               <div>
