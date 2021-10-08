@@ -25,6 +25,7 @@ services:
         --port 8000
         --name MSP1
         --agentUrl http://${ip_address}:7080
+        --schemaName MSP1-Ticket
     depends_on:
       - msp1-agent
   
@@ -102,6 +103,7 @@ services:
         --port 9229
         --name MSP2
         --agentUrl http://${ip_address}:8050
+        --schemaName MSP2-Ticket
     depends_on:
       - msp2-agent
 

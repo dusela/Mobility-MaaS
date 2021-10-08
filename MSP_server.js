@@ -25,6 +25,7 @@ const args = stdio.getopt({
     "port": {key: "port", args: 1, description: "Port", mandatory: true},
     "name": {key: "name", args: 1, description: "MSP Name", mandatory: true},
     "agentUrl": {key: "agentUrl", args: 1, description: "Agent URL", mandatory: true},
+    "schemaName": {key: "schemaName", args: 1, description: "Schema Name", mandatory: true}
 });
 
 const ip_address = args.ip;
@@ -38,6 +39,9 @@ console.log("name: " + name);
 
 const agentUrl = args.agentUrl;
 console.log("Agent URL: " + agentUrl);
+
+const schemaName = args.schemaName;
+console.log("schemaName: " + schemaName);
 
 var schemaId;
 var credDefId;
@@ -113,7 +117,7 @@ class Test {
             "revocation_registry_size": 1000,
             "schema_id": schemaId,
             "support_revocation": true,
-            "tag": "default"
+            "tag": "MSP-Ticket"
         }
 
         console.log(credDefBody);
@@ -140,6 +144,40 @@ class Test {
         //console.log("Response " + response)
         return Promise.resolve(response)
     };
+
+    async sendProofRequest(connectionId) {
+        let credentialBody= {
+            "connection_id": conncectionId,
+            "name":"Proof request",
+            "requested_predicates":{
+               
+            },
+            "requested_attributes":{
+               "masterId":{
+                  "names":[
+                     "FirstName",
+                     "LastName",
+                     "Card Number",
+                     "Expiration",
+                     "Secret"
+                  ],
+                  "restrictions":[
+                     {
+                        "cred_def_id":"Th7MpTaRZVRYnPiabds81Y:3:CL:20:MasterCard"
+                     }
+                  ]
+               }
+            },
+            "version":"0.1",
+            "nonce":"123456789"
+         }
+         let response = await this.httpRequest(agentUrl + "/present-proof/send-request", "POST", credentialBody).catch(err => {
+            console.log(err);
+            return Promise.reject(-1);
+        });
+        console.log(response);
+        return Promise.resolve(response);
+    }
 
     async issueCredential(connectionId, start, dest, time) {
 
@@ -267,17 +305,8 @@ class Test {
                             let json_body = JSON.parse(body);
                             console.log(json_body);
                             if (json_body["state"] == "response") {
-                                console.log("Continuing with issue credential");
-                                bookings.forEach(element => {
-                                    console.log("Looking at element " + element);
-                                    if(element[0] == json_body["connection_id"]) {
-                                        console.log("Found booking with connection_id: " + json_body["connection_id"]);
-                                        console.log("issuing a credential with start " + element[1]);
-                                        console.log("issuing a credential with dest " + element[2]);
-                                        console.log("issuing a credential with time " + element[3]);
-                                        this.issueCredential(json_body["connection_id"], element[1], element[2], element[3]);       
-                                    }
-                                });
+                                console.log("Continuing with request-proof");
+                                await this.sendProofRequest(json_body["connection_id"]);
                             } else {
                                 console.log("State: " + json_body["state"]);
                                 console.log("Nothing to do");
@@ -285,7 +314,46 @@ class Test {
                             res.writeHead(200, "Ok");
                             res.end("Connection webhook received");
                         });
-                    } else if (req.url == "/topic/issue-credential/") {
+                    } else if (req.method == "POST") {
+                        console.log("Serving POST request");
+                        console.log(req.url);
+                        if (req.url == "/topic/present-proof/") {
+                            console.log("Receiving a present-proof webhook")
+                            let response = await this.httpRequest(agentUrl + "/present-proof/records", "POST", {}).catch(err => {
+                                console.log(err)
+                                return Promise.reject(-1)
+                            });
+                            console.log(response);
+                            let body = [];
+                            req.on('error', (err) => {
+                                console.error(err);
+                            }).on('data', (chunk) => {
+                                body.push(chunk);
+                            }).on('end', () => {
+                                body = Buffer.concat(body).toString();
+                                //console.log(body);
+                                let json_body = JSON.parse(body);
+                                console.log(json_body);
+                                if (json_body["state"] == "response") {
+                                    console.log("Continuing with issue credential");
+                                    bookings.forEach(element => {
+                                        console.log("Looking at element " + element);
+                                        if(element[0] == json_body["connection_id"]) {
+                                            console.log("Found booking with connection_id: " + json_body["connection_id"]);
+                                            console.log("issuing a credential with start " + element[1]);
+                                            console.log("issuing a credential with dest " + element[2]);
+                                            console.log("issuing a credential with time " + element[3]);
+                                            this.issueCredential(json_body["connection_id"], element[1], element[2], element[3]);       
+                                        }
+                                    });
+                                } else {
+                                    console.log("State: " + json_body["state"]);
+                                    console.log("Nothing to do");
+                                }
+                                res.writeHead(200, "Ok");
+                                res.end("Connection webhook received");
+                            });
+                        }} else if (req.url == "/topic/issue-credential/") {
                         console.log("Receiving an issue-credential webhook")
                         const {headers, method, url} = req;
                         let body = [];
